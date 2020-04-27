@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const yaml = require('js-yaml');
+const jsonEdit = require('@json-edit/json-edit');
 
 class ServerlessRemoveDummyHandlerPlugin {
 
@@ -76,26 +77,8 @@ class ServerlessRemoveDummyHandlerPlugin {
             this.serverless.cli.log('----------------------------');
             this.serverless.cli.log(`File : ${fileList[i]}`);
 
-            //remove resouces
-            this.serverless.cli.log('Removing Resources..........');
-            if (json.Resources || json.service.provider.compiledCloudFormationTemplate.Resources) {
-                const updatedJSON = await this.removeKeys(json.Resources || json.service.provider.compiledCloudFormationTemplate.Resources, newKeys);
-                if (json.Resources) {
-                    json.Resources = updatedJSON;
-                } else if (json.service.provider.compiledCloudFormationTemplate.Resources) {
-                    json.service.provider.compiledCloudFormationTemplate.Resources = updatedJSON;
-                }
-            }
-
-            //remove output
-            this.serverless.cli.log('Removing Output..........');
-            if (json.Outputs || json.service.provider.compiledCloudFormationTemplate.Outputs) {
-                const updatedJSON = await this.removeKeys(json.Outputs || json.service.provider.compiledCloudFormationTemplate.Outputs, newKeys);
-                if (json.Outputs) {
-                    json.Outputs = updatedJSON;
-                } else if (json.service.provider.compiledCloudFormationTemplate.Outputs) {
-                    json.service.provider.compiledCloudFormationTemplate.Outputs = updatedJSON;
-                }
+            for (let j = 0; j < newKeys.length; j++) {
+                await jsonEdit.deleteNode(json, newKeys[j], true, true);
             }
 
             //write json to file
@@ -133,26 +116,6 @@ class ServerlessRemoveDummyHandlerPlugin {
                 resolve(fileList);
             });
         })
-    }
-
-    async removeKeys(json, removeKeys) {
-        const finalKeysToRemove = [];
-        const keys = Object.keys(json);
-        for (let i = 0; i < keys.length; i++) {
-            const keyToCheck = keys[i];
-            for (let j = 0; j < removeKeys.length; j++) {
-                const keyToRemove = removeKeys[j];
-                if (keyToCheck.toLocaleLowerCase().indexOf(keyToRemove.toLowerCase()) >= 0) {
-                    finalKeysToRemove.push(keyToCheck);
-                    break;
-                }
-            }
-        }
-        for (let i = 0; i < finalKeysToRemove.length; i++) {
-            delete json[finalKeysToRemove[i]]
-        }
-        this.serverless.cli.log(`Keys Removed : ${finalKeysToRemove}`);
-        return json;
     }
 }
 
