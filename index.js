@@ -61,6 +61,8 @@ class ServerlessRemoveDummyHandlerPlugin {
         //remove skip functions
         this.removeSkipFunctions(keys, this.options.skipFunctions);
 
+        this.normalizeFunctionName(keys);
+
         //construct keys to macth for removal
         const newKeys = [];
         for (let i = 0; i < keys.length; i++) {
@@ -79,6 +81,9 @@ class ServerlessRemoveDummyHandlerPlugin {
 
             for (let j = 0; j < newKeys.length; j++) {
                 await jsonEdit.deleteNode(json, newKeys[j], true, true);
+
+                //remove dependencies from 'DependsOn'
+                await jsonEdit.deleteValueInStringArray(json, 'DependsOn', newKeys[j]);
             }
 
             //write json to file
@@ -97,6 +102,15 @@ class ServerlessRemoveDummyHandlerPlugin {
                     const index = functions.indexOf(split[i]);
                     if (index !== -1) functions.splice(index, 1);
                 }
+            }
+        }
+    }
+
+    async normalizeFunctionName(keys) {
+        if (keys) {
+            for (let i = 0; i < keys.length; i++) {
+                let key = keys[i];
+                keys[i] = key.replace(/-/g, 'dash');
             }
         }
     }

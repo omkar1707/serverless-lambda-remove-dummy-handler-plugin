@@ -9,7 +9,7 @@
   "author": "Onkar Kore",
   "license": "MIT",
   "dependencies": {
-    "@json-edit/json-edit": "1.0.1",
+    "@json-edit/json-edit": "1.0.2",
     "js-yaml": "^3.13.1"
   }
 }
